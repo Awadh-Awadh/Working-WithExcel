@@ -8,6 +8,36 @@ var file = new FileInfo(@"C:\Users\AwadhSaid\Desktop\Demos\learn.xlsx");
 
 var people = GetSetUpData();
 await SaveExcelFile(people, file);
+var peopleFromExcel = await LoadFromExcel(file);
+
+foreach (var p in peopleFromExcel)
+{
+    Console.WriteLine($"{p.Id} {p.FirstName}, {p.LastName}");
+}
+
+static async Task<List<PersonModel>> LoadFromExcel(FileInfo file)
+{
+    List<PersonModel> output = new() { };
+    using var package = new ExcelPackage(file);
+    
+    await package.LoadAsync(file);
+    var ws = package.Workbook.Worksheets[0];
+    // first two rows are for headers
+    var row = 3;
+    var column = 1;
+    while(string.IsNullOrWhiteSpace(ws.Cells[row,column].Value?.ToString()) == false)
+    {
+        PersonModel person = new();
+        person.Id = int.Parse(ws.Cells[row, column].Value.ToString());
+        person.FirstName = ws.Cells[row, column = 1].ToString();
+        person.LastName = ws.Cells[row, column + 2].ToString();
+        output.Add(person);
+        row+=1;
+    }
+
+    return output;
+
+}
 
 static async Task SaveExcelFile(IEnumerable<PersonModel> people, FileInfo file)
 {
